@@ -16,33 +16,42 @@ function Prompt(question, rl, answers) {
     this.responses = [];
     return this;
 }
-util.inherits( Prompt, Base );
+util.inherits(Prompt, Base);
 
-Prompt.prototype.askForLoop = function() {
-    var ui = inquirer.prompt({
+Prompt.prototype.makePrompt = function () {
+    return {
         default: true,
-        type:'confirm',
+        type: 'confirm',
         name: 'loop',
         message: this.opt.message || 'Would you like to loop ?'
-    }).then(function (result) {
-        if(result.loop) {
+    }
+}
+
+Prompt.prototype.askForLoop = function () {
+    inquirer.prompt(this.makePrompt()).then(answers => {
+        if (answers.loop) {
             this.askNestedQuestion();
         } else {
-            this.done( this.responses );
+            this.status = 'answered';
+            this.done(this.responses);
         }
-    }.bind(this));
+    });
 }
 
-Prompt.prototype.askNestedQuestion = function() {
-    inquirer.prompt(this.opt.prompts).then(function (result) {
-        this.responses.push(result);
+Prompt.prototype.askNestedQuestion = function () {
+    inquirer.prompt(this.opt.prompts).then(answers => {
+        this.responses.push(answers);
         this.askForLoop();
-    }.bind(this));
+    });
 }
 
 
-Prompt.prototype._run = function( cb ) {
+Prompt.prototype._run = function (cb) {
     this.done = cb;
     this.askForLoop();
     return this;
 };
+
+Prompt.prototype.close = function () {
+    // Do Nothing
+}
